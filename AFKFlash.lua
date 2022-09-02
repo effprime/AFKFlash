@@ -11,6 +11,7 @@ end
 -------------------------------------------
 
 local function OnFlagChange(...)
+	StaticPopup_Show ("GENERAL_ALERT", "Alerting disabled")
 	if not Enabled then
 		return
 	end
@@ -23,21 +24,24 @@ local function OnFlagChange(...)
 		SendChatMessage("I'm afk!", "WHISPER", "Common", MainAlertName);
 	end
 
-	StaticPopup_Show ("NOTIFY")
+	StaticPopup_Show ("AFK_ALERT")
 	FlashClientIcon()
 end
 
 local function OnToggleCmd(...)
+	local status = ""
+
 	if Enabled == true then
 		Enabled = false
-		SetCVar("autoClearAFK", "on")
-		PPrint("Alerting disabled")
+		SetCVar("autoClearAFK", 1)
+		status = "disabled"
 	else
 		Enabled = true
-		SetCVar("autoClearAFK", "off")
-		PPrint("Alerting enabled")
+		SetCVar("autoClearAFK", 0)
+		status = "enabled"
 	end
-	ReloadUI()
+
+	PPrint("Alerting " .. status)
 end
 
 local function OnSetWhisperTargetCmd(msg)
@@ -96,7 +100,7 @@ end
 
 -------------------------------------------
 
-StaticPopupDialogs["NOTIFY"] = {
+StaticPopupDialogs["AFK_ALERT"] = {
 	text = "AFK Alert!",
 	button1 = "I'm back!",
 	button2 = "Stay AFK",
@@ -109,8 +113,8 @@ StaticPopupDialogs["NOTIFY"] = {
 	preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 }
 
-if Enabled then
-	SetCVar("autoClearAFK", "off")
+if Enabled == nil then
+	Enabled = true
 end
 
 PPrint("Creating frame")
