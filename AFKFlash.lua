@@ -90,7 +90,7 @@ local function OnStatusCmd(...)
 	PPrint("Current config state:")
 	print("- AFK Alerts: " .. tostring(AlertAFK))
 	print("- Logout Alerts: " .. tostring(AlertLogout))
-	print("- Whisper target: " .. MainAlertName)
+	print("- Whisper target: " .. tostring(MainAlertName))
 end
 
 -------------------------------------------
