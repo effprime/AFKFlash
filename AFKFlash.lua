@@ -10,18 +10,25 @@ end
 -- Handlers -------------------------------
 -------------------------------------------
 
+local logoutTimer = nil
+
 local function OnFlagChange(...)
-	StaticPopup_Show ("GENERAL_ALERT", "Alerting disabled")
 	if not Enabled then
 		return
 	end
 
 	if not UnitIsAFK("player") then
+		if logoutTimer ~= nil and not logoutTimer:IsCancelled() then
+			PPrint("Stopping logout timer alert")
+			logoutTimer:Cancel()
+		end
 		return
 	end
 
 	if MainAlertName ~= nil then 
 		SendChatMessage("I'm afk!", "WHISPER", "Common", MainAlertName);
+		PPrint("Starting logout timer alert")
+		logoutTimer = C_Timer.NewTimer(1500, function() SendChatMessage("I'll be logged out in 5 minutes!", "WHISPER", "Common", MainAlertName); FlashClientIcon() end)
 	end
 
 	StaticPopup_Show ("AFK_ALERT")
