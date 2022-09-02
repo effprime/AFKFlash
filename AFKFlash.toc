@@ -1,0 +1,8 @@
+## Interface: 30400
+## Version: 1.0.0
+## Title: AFK Flash
+## Notes: Flashes client when AFK
+## Author: Olklo
+## SavedVariables: Enabled, MainAlertName
+
+AFKFlash.lua
