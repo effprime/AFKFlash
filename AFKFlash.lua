@@ -12,24 +12,23 @@ end
 
 local logoutTimer = nil
 
-local function OnFollowUp()
-	if MainAlertName ~= nil then 
-		SendChatMessage("I'll be logged out in 5 minutes!", "WHISPER", "Common", MainAlertName)
-	end
-	FlashClientIcon()
-end
-
 local function OnFlagChange(...)
 	if not UnitIsAFK("player") then
 		if logoutTimer ~= nil and not logoutTimer:IsCancelled() then
 			PPrint("Stopping logout timer alert")
 			logoutTimer:Cancel()
+			StaticPopup_Hide ("AFK_ALERT")
 		end
 		return
 	end
 
 	if AlertLogout then
-		logoutTimer = C_Timer.NewTimer(1500, OnFollowUp)
+		logoutTimer = C_Timer.NewTimer(1200, function() 
+			if MainAlertName ~= nil then 
+				SendChatMessage("I'll be logged out soon! (5-10 min)", "WHISPER", "Common", MainAlertName)
+			end
+			FlashClientIcon()
+		end)
 	end
 
 	if AlertAFK then
@@ -37,10 +36,9 @@ local function OnFlagChange(...)
 			SendChatMessage("I'm afk!", "WHISPER", "Common", MainAlertName);
 			PPrint("Starting logout timer alert")
 		end
-
-		StaticPopup_Show ("AFK_ALERT")
 		FlashClientIcon()
 	end
+	StaticPopup_Show ("AFK_ALERT", date("%H:%M", time() + 1500) .. " - " .. date("%H:%M", time() + 1800))
 end
 
 local function OnToggleAFKAlertCmd(...)
@@ -140,7 +138,7 @@ end
 -------------------------------------------
 
 StaticPopupDialogs["AFK_ALERT"] = {
-	text = "AFK Alert!",
+	text = "AFK Alert! Estimated logout time: %s",
 	button1 = "I'm back!",
 	button2 = "Stay AFK",
 	OnAccept = function()
