@@ -12,11 +12,14 @@ end
 
 local logoutTimer = nil
 
-local function OnFlagChange(...)
-	if not Enabled then
-		return
+local function OnFollowUp()
+	if MainAlertName ~= nil then 
+		SendChatMessage("I'll be logged out in 5 minutes!", "WHISPER", "Common", MainAlertName)
 	end
+	FlashClientIcon()
+end
 
+local function OnFlagChange(...)
 	if not UnitIsAFK("player") then
 		if logoutTimer ~= nil and not logoutTimer:IsCancelled() then
 			PPrint("Stopping logout timer alert")
@@ -25,30 +28,49 @@ local function OnFlagChange(...)
 		return
 	end
 
-	if MainAlertName ~= nil then 
-		SendChatMessage("I'm afk!", "WHISPER", "Common", MainAlertName);
-		PPrint("Starting logout timer alert")
-		logoutTimer = C_Timer.NewTimer(1500, function() SendChatMessage("I'll be logged out in 5 minutes!", "WHISPER", "Common", MainAlertName); FlashClientIcon() end)
+	if AlertLogout then
+		logoutTimer = C_Timer.NewTimer(1500, OnFollowUp)
 	end
 
-	StaticPopup_Show ("AFK_ALERT")
-	FlashClientIcon()
+	if AlertAFK then
+		if MainAlertName ~= nil then 
+			SendChatMessage("I'm afk!", "WHISPER", "Common", MainAlertName);
+			PPrint("Starting logout timer alert")
+		end
+
+		StaticPopup_Show ("AFK_ALERT")
+		FlashClientIcon()
+	end
 end
 
-local function OnToggleCmd(...)
+local function OnToggleAFKAlertCmd(...)
 	local status = ""
 
-	if Enabled == true then
-		Enabled = false
+	if AlertAFK == true then
+		AlertAFK = false
 		SetCVar("autoClearAFK", 1)
 		status = "disabled"
 	else
-		Enabled = true
+		AlertAFK = true
 		SetCVar("autoClearAFK", 0)
 		status = "enabled"
 	end
 
-	PPrint("Alerting " .. status)
+	PPrint("AFK alerting " .. status)
+end
+
+local function OnToggleLogoutAlertCmd(...)
+	local status = ""
+
+	if AlertLogout == true then
+		AlertLogout = false
+		status = "disabled"
+	else
+		AlertLogout = true
+		status = "enabled"
+	end
+
+	PPrint("Logout alerting " .. status)
 end
 
 local function OnSetWhisperTargetCmd(msg)
@@ -64,6 +86,13 @@ local function OnGetWhisperTargetCmd(msg)
 	PPrint("Current whisper target: " .. MainAlertName)
 end
 
+local function OnStatusCmd(...)
+	PPrint("Current config state:")
+	print("- AFK Alerts: " .. tostring(AlertAFK))
+	print("- Logout Alerts: " .. tostring(AlertLogout))
+	print("- Whisper target: " .. MainAlertName)
+end
+
 -------------------------------------------
 -- Slash commands -------------------------
 -------------------------------------------
@@ -77,14 +106,17 @@ function Command:new(callback, description)
 end
 
 local cmdTable = {
-	["toggle"] = Command:new(OnToggleCmd, "Toggles alerting"),
+	["toggle-afk-alert"] = Command:new(OnToggleAFKAlertCmd, "Toggles AFK alerting"),
+	["toggle-logout-alert"] = Command:new(OnToggleLogoutAlertCmd, "Toggles logout alerting"),
 	["set-whisper-target"] = Command:new(OnSetWhisperTargetCmd, "Sets the whisper target for when you go AFK (set to empty to disable)"),
-	["get-whisper-target"] = Command:new(OnGetWhisperTargetCmd, "Displays the current whisper target")
+	["get-whisper-target"] = Command:new(OnGetWhisperTargetCmd, "Displays the current whisper target"),
+	["status"] = Command:new(OnStatusCmd, "Gets the current config status")
 }
 
 local function printCommands()
+	PPrint("Commands:")
 	for k, v in pairs(cmdTable) do
-		print(k .. ": " .. v["description"])
+		print("- " .. k .. ": " .. v["description"])
 	end
 end
 
@@ -120,8 +152,12 @@ StaticPopupDialogs["AFK_ALERT"] = {
 	preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 }
 
-if Enabled == nil then
-	Enabled = true
+if AlertAFK == nil then
+	AlertAFK = true
+end
+
+if AlertLogout == nil then
+	AlertLogout = true
 end
 
 PPrint("Creating frame")
