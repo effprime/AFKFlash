@@ -37,6 +37,7 @@ local function OnToggleCmd(...)
 		SetCVar("autoClearAFK", "off")
 		PPrint("Alerting enabled")
 	end
+	ReloadUI()
 end
 
 local function OnSetWhisperTargetCmd(msg)
