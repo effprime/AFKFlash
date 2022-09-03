@@ -6,6 +6,14 @@ local function PPrint(msg)
 	print("AFKFlash: " .. msg)
 end
 
+local function initAutoClearAFKCVar()
+	if AlertAFK == true then
+		SetCVar("autoClearAFK", 0)
+	else
+		SetCVar("autoClearAFK", 1)
+	end
+end
+
 -------------------------------------------
 -- Handlers -------------------------------
 -------------------------------------------
@@ -23,6 +31,9 @@ local function OnFlagChange(...)
 	end
 
 	if AlertLogout then
+		if logoutTimer ~= nil and not logoutTimer:IsCancelled() then
+			logoutTimer:Cancel()
+		end
 		logoutTimer = C_Timer.NewTimer(1200, function() 
 			if MainAlertName ~= nil then 
 				SendChatMessage("I'll be logged out soon! (5-10 min)", "WHISPER", "Common", MainAlertName)
@@ -46,13 +57,13 @@ local function OnToggleAFKAlertCmd(...)
 
 	if AlertAFK == true then
 		AlertAFK = false
-		SetCVar("autoClearAFK", 1)
 		status = "disabled"
 	else
 		AlertAFK = true
-		SetCVar("autoClearAFK", 0)
 		status = "enabled"
 	end
+
+	initAutoClearAFKCVar()
 
 	PPrint("AFK alerting " .. status)
 end
@@ -157,6 +168,9 @@ end
 if AlertLogout == nil then
 	AlertLogout = true
 end
+
+PPrint("Setting autoClearAFK CVar")
+initAutoClearAFKCVar()
 
 PPrint("Creating frame")
 local f = CreateFrame("Frame")
