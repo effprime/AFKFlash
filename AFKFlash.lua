@@ -1,53 +1,63 @@
--------------------------------------------
--- Util -----------------------------------
--------------------------------------------
+local logoutTimer = nil
 
 local function PPrint(msg)
 	print("AFKFlash: " .. msg)
 end
 
-local function initAutoClearAFKCVar()
-	if AlertAFK == true then
+local function UpdateAutoClearAFKCVar()
+	-- whispers sent when AFK remove the AFK flag,
+	-- so autoClearAFK must be disabled whenever there is a whisper target
+	if MainAlertName ~= nil then
 		SetCVar("autoClearAFK", 0)
 	else
 		SetCVar("autoClearAFK", 1)
 	end
 end
 
--------------------------------------------
--- Handlers -------------------------------
--------------------------------------------
+local function HandleBackFromAFK()
+	if logoutTimer ~= nil and not logoutTimer:IsCancelled() then
+		PPrint("Stopping logout timer alert")
+		logoutTimer:Cancel()
+		StaticPopup_Hide ("AFK_ALERT")
+	end
+end
 
-local logoutTimer = nil
-
-local function OnFlagChange(...)
-	if not UnitIsAFK("player") then
-		if logoutTimer ~= nil and not logoutTimer:IsCancelled() then
-			PPrint("Stopping logout timer alert")
-			logoutTimer:Cancel()
-			StaticPopup_Hide ("AFK_ALERT")
+local function HandleLogoutAlert()
+	if logoutTimer ~= nil and not logoutTimer:IsCancelled() then
+		logoutTimer:Cancel()
+	end
+	PPrint("Starting logout timer alert")
+	logoutTimer = C_Timer.NewTimer(1200, function() 
+		if MainAlertName ~= nil then 
+			SendChatMessage("I'll be logged out soon! (5-10 min)", "WHISPER", "Common", MainAlertName)
 		end
+		FlashClientIcon() 
+	end)
+end
+
+local function HandleAFKAlert()
+	if MainAlertName ~= nil then 
+		SendChatMessage("I'm afk!", "WHISPER", "Common", MainAlertName);
+	end
+	FlashClientIcon()
+end
+
+local function OnFlagChange(self, event, unitID)
+	if unitID ~= "player" then
+		return
+	end
+
+	if not UnitIsAFK("player") then
+		HandleBackFromAFK()
 		return
 	end
 
 	if AlertLogout then
-		if logoutTimer ~= nil and not logoutTimer:IsCancelled() then
-			logoutTimer:Cancel()
-		end
-		logoutTimer = C_Timer.NewTimer(1200, function() 
-			if MainAlertName ~= nil then 
-				SendChatMessage("I'll be logged out soon! (5-10 min)", "WHISPER", "Common", MainAlertName)
-			end
-			FlashClientIcon()
-		end)
+		HandleLogoutAlert()
 	end
 
 	if AlertAFK then
-		if MainAlertName ~= nil then 
-			SendChatMessage("I'm afk!", "WHISPER", "Common", MainAlertName);
-			PPrint("Starting logout timer alert")
-		end
-		FlashClientIcon()
+		HandleAFKAlert()
 	end
 	StaticPopup_Show ("AFK_ALERT", date("%H:%M", time() + 1500) .. " - " .. date("%H:%M", time() + 1800))
 end
@@ -84,6 +94,7 @@ end
 
 local function OnSetWhisperTargetCmd(msg)
 	MainAlertName = msg
+	UpdateAutoClearAFKCVar()
 	PPrint("Whisper target set to: " .. MainAlertName)
 end
 
@@ -101,10 +112,6 @@ local function OnStatusCmd(...)
 	print("- Logout Alerts: " .. tostring(AlertLogout))
 	print("- Whisper target: " .. tostring(MainAlertName))
 end
-
--------------------------------------------
--- Slash commands -------------------------
--------------------------------------------
 
 Command = {callback = nil, description = nil}
 function Command:new(callback, description)
@@ -146,8 +153,6 @@ SlashCmdList.ENTRYPOINT = function(msg, ...)
 	fn.callback(msg)
 end
 
--------------------------------------------
-
 StaticPopupDialogs["AFK_ALERT"] = {
 	text = "AFK Alert! Estimated logout time: %s",
 	button1 = "I'm back!",
@@ -161,6 +166,8 @@ StaticPopupDialogs["AFK_ALERT"] = {
 	preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 }
 
+-------------------------------------------
+
 if AlertAFK == nil then
 	AlertAFK = true
 end
@@ -170,7 +177,7 @@ if AlertLogout == nil then
 end
 
 PPrint("Setting autoClearAFK CVar")
-initAutoClearAFKCVar()
+UpdateAutoClearAFKCVar()
 
 PPrint("Creating frame")
 local f = CreateFrame("Frame")
