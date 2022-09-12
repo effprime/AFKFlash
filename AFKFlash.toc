@@ -3,6 +3,10 @@
 ## Title: AFK Flash
 ## Notes: Flashes client when AFK
 ## Author: Olklo
-## SavedVariables: AlertAFK, AlertLogout, MainAlertName
+## SavedVariables: AlertAFK, AlertLogout, WhisperTarget
 
-AFKFlash.lua
+util.lua
+dialogs.lua
+slash.lua
+handlers.lua
+main.lua
