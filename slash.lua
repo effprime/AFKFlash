@@ -9,8 +9,6 @@ function OnToggleAFKAlertCmd(...)
 		status = "enabled"
 	end
 
-	UpdateAutoClearAFKCVar()
-
 	PPrint("AFK alerting " .. status)
 end
 
@@ -28,24 +26,31 @@ function OnToggleLogoutAlertCmd(...)
 	PPrint("Logout alerting " .. status)
 end
 
+function OnToggleReturnAlertCmd(...)
+	local status = ""
+
+	if AlertReturn == true then
+		AlertReturn = false
+		status = "disabled"
+	else
+		AlertReturn = true
+		status = "enabled"
+	end
+
+	PPrint("Return from AFK alerting " .. status)
+end
+
 function OnSetWhisperTargetCmd(msg)
 	WhisperTarget = msg
 	UpdateAutoClearAFKCVar()
 	PPrint("Whisper target set to: " .. WhisperTarget)
 end
 
-function OnGetWhisperTargetCmd(msg)
-	if WhisperTarget == nil or WhisperTarget == "" then
-		PPrint("There is no whisper target currently set")
-		return
-	end
-	PPrint("Current whisper target: " .. WhisperTarget)
-end
-
 function OnStatusCmd(...)
 	PPrint("Current config state:")
 	print("- AFK Alerts: " .. tostring(AlertAFK))
 	print("- Logout Alerts: " .. tostring(AlertLogout))
+	print("- Return from AFK alerts: " .. tostring(AlertReturn))
 	print("- Whisper target: " .. tostring(WhisperTarget))
 end
 
@@ -61,15 +66,15 @@ end
 local cmdTable = {
 	["toggle-afk-alert"] = Command:new(OnToggleAFKAlertCmd, "Toggles AFK alerting", nil),
 	["toggle-logout-alert"] = Command:new(OnToggleLogoutAlertCmd, "Toggles logout alerting", nil),
+	["toggle-return-alert"] = Command:new(OnToggleReturnAlertCmd, "Toggles returning from alerting", nil),
 	["set-whisper-target"] = Command:new(OnSetWhisperTargetCmd, "Sets the whisper target for when you go AFK (set to empty to disable)", "<character-name>"),
-	["get-whisper-target"] = Command:new(OnGetWhisperTargetCmd, "Displays the current whisper target", nil),
 	["status"] = Command:new(OnStatusCmd, "Gets the current config status", nil)
 }
 local order = {
 	"toggle-afk-alert",
 	"toggle-logout-alert",
+	"toggle-return-alert",
 	"set-whisper-target",
-	"get-whisper-target",
 	"status"
 }
 

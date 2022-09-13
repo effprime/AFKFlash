@@ -4,11 +4,11 @@ local function HandleBackFromAFK()
 	if logoutTimer ~= nil and not logoutTimer:IsCancelled() then
 		PPrint("Stopping logout timer alert")
 		logoutTimer:Cancel()
-		if AlertAFK then
-			WhisperMain("I am no longer AFK!")
-		end
-		StaticPopup_Hide ("AFK_ALERT")
 	end
+	if AlertReturn then
+		WhisperMain("I am no longer AFK!")
+	end
+	StaticPopup_Hide ("AFK_ALERT")
 end
 
 local function HandleLogoutAlert()
@@ -18,7 +18,7 @@ local function HandleLogoutAlert()
 	PPrint("Starting logout timer alert")
 	logoutTimer = C_Timer.NewTimer(1200, function() 
 		WhisperMain("I'll be logged out soon! (5-10 min)")
-		FlashClientIcon() 
+		FlashClientIcon()
 	end)
 end
 
